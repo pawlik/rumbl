@@ -10,7 +10,7 @@ defmodule RumblWeb.VideoController do
   end
 
   def index(conn, _params, user) do
-    videos = user_videos(user)
+    videos = Repo.all(user_videos(user))
     render(conn, "index.html", videos: videos)
   end
 
@@ -40,19 +40,19 @@ defmodule RumblWeb.VideoController do
     end
   end
 
-  def show(conn, %{"id" => id}, _user) do
-    video = Web.get_video!(id)
+  def show(conn, %{"id" => id}, user) do
+    video = Repo.get!(user_videos(user), id)
     render(conn, "show.html", video: video)
   end
 
-  def edit(conn, %{"id" => id}) do
-    video = Web.get_video!(id)
+  def edit(conn, %{"id" => id}, user) do
+    video = Repo.get!(user_videos(user), id)
     changeset = Web.change_video(video)
     render(conn, "edit.html", video: video, changeset: changeset)
   end
 
-  def update(conn, %{"id" => id, "video" => video_params}) do
-    video = Web.get_video!(id)
+  def update(conn, %{"id" => id, "video" => video_params}, user) do
+    video = Repo.get!(user_videos(user), id)
 
     case Web.update_video(video, video_params) do
       {:ok, video} ->
@@ -65,8 +65,8 @@ defmodule RumblWeb.VideoController do
     end
   end
 
-  def delete(conn, %{"id" => id}) do
-    video = Web.get_video!(id)
+  def delete(conn, %{"id" => id}, id, user) do
+    video = Repo.get!(user_videos(user), id)
     {:ok, _video} = Web.delete_video(video)
 
     conn
@@ -75,6 +75,6 @@ defmodule RumblWeb.VideoController do
   end
 
   defp user_videos(user) do
-    Repo.preload(user, :videos).videos
+    Ecto.assoc(user, :videos)
   end
 end
